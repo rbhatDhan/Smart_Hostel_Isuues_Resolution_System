@@ -1,4 +1,5 @@
 import Complaint from "../models/Complaint.js";
+import Notification from "../models/Notification.js";
 
 
 
@@ -20,6 +21,14 @@ export const createComplaint = async (req, res) => {
       description,
       slaDeadline,
     });
+
+    
+    // Create notification for admin/warden (for now we send to same user)
+    await Notification.create({
+      userId: req.user.id,
+      message: "New complaint submitted",
+    });
+        
 
     res.status(201).json({
       message: "Complaint created successfully",
@@ -108,6 +117,103 @@ export const updateComplaintStatus = async (req, res) => {
       complaint.resolutionNote = resolutionNote;
       complaint.resolvedAt = new Date();
     }
+
+    await complaint.save();
+
+    // Notify student
+    await Notification.create({
+      userId: complaint.studentId,
+      message: `Your complaint status updated to ${status}`,
+    });
+
+    res.json({
+      message: "Complaint updated successfully",
+      complaint,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+//Cancel Complaint
+export const cancelComplaint = async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+
+    if (!complaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    // Only owner can cancel
+    if (complaint.studentId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Cannot cancel resolved complaint
+    if (complaint.status === "resolved") {
+      return res.status(400).json({ message: "Cannot cancel resolved complaint" });
+    }
+
+    complaint.status = "cancelled";
+    await complaint.save();
+
+    // 🔔 Notification
+    await Notification.create({
+      userId: req.user.id,
+      message: "Your complaint has been cancelled",
+    });
+
+    res.json({
+      message: "Complaint cancelled successfully",
+      complaint,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+//Edit complaint within 15 mins window
+export const editComplaint = async (req, res) => {
+  try {
+    const { roomNumber, category, description } = req.body;
+
+    const complaint = await Complaint.findById(req.params.id);
+
+    if (!complaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    // 🔐 Only owner can edit
+    if (complaint.studentId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // ⏱ 15-minute window check
+    const now = new Date();
+    const createdTime = new Date(complaint.createdAt);
+
+    const diffInMinutes = (now - createdTime) / (1000 * 60);
+
+    if (diffInMinutes > 15) {
+      return res.status(400).json({
+        message: "Edit allowed only within 15 minutes",
+      });
+    }
+
+    // ❌ Cannot edit resolved/cancelled
+    if (
+      complaint.status === "resolved" ||
+      complaint.status === "cancelled"
+    ) {
+      return res.status(400).json({
+        message: "Cannot edit this complaint",
+      });
+    }
+
+    // ✏️ Update fields
+    complaint.roomNumber = roomNumber || complaint.roomNumber;
+    complaint.category = category || complaint.category;
+    complaint.description = description || complaint.description;
 
     await complaint.save();
 

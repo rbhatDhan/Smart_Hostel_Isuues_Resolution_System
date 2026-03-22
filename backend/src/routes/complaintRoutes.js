@@ -2,7 +2,9 @@ import express from "express";
 import { createComplaint, 
   getMyComplaints, 
   getAllComplaints,
-  updateComplaintStatus  } from "../controllers/complaintController.js";
+  updateComplaintStatus ,
+  cancelComplaint,
+   editComplaint   } from "../controllers/complaintController.js";
 import protect from "../middleware/authMiddleware.js";
 import authorizeRoles from "../middleware/roleMiddleware.js";
 
@@ -22,5 +24,11 @@ router.put(
   authorizeRoles("warden", "admin"),
   updateComplaintStatus
 );
+
+// Student cancels complaint
+router.put("/:id/cancel", protect, cancelComplaint);
+
+// Student edits complaint (within 15 mins)
+router.put("/:id/edit", protect, editComplaint);
 
 export default router;
