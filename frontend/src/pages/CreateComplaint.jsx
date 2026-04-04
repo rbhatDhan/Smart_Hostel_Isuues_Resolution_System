@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Layout from "../components/Layout";
+import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
 const CreateComplaint = () => {
   const [form, setForm] = useState({
@@ -11,6 +13,7 @@ const CreateComplaint = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({
@@ -19,25 +22,37 @@ const CreateComplaint = () => {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    setTimeout(() => {
-      console.log(form);
-      alert("Complaint submitted ✅");
+  try {
+    await api.post("/api/complaints", {
+      roomNumber: form.room,
+      category: form.category,
+      description: form.description,
+    });
 
-      setForm({
-        title: "",
-        category: "",
-        priority: "",
-        room: "",
-        description: "",
-      });
+    alert("Complaint submitted ✅");
 
-      setLoading(false);
-    }, 1000);
-  };
+    // Reset form
+    setForm({
+      title: "",
+      category: "",
+      priority: "",
+      room: "",
+      description: "",
+    });
+
+    // Redirect to my complaints
+    navigate("/my-complaints");
+
+  } catch (error) {
+    alert(error.response?.data?.message || "Error submitting complaint");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Layout>
@@ -80,20 +95,19 @@ const CreateComplaint = () => {
               <div>
                 <label className="text-sm text-gray-600">Category</label>
                 <select
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-3 rounded-xl bg-white/70 border border-gray-200 focus:ring-2 focus:ring-indigo-400 outline-none"
-                  required
-                >
-                  <option value="">Select</option>
-                  <option>Water</option>
-                  <option>Electricity</option>
-                  <option>WiFi</option>
-                  <option>Cleaning</option>
-                  <option>Furniture</option>
-                  <option>Other</option>
-                </select>
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="w-full mt-1 p-3 rounded-xl bg-white/70 border border-gray-200"
+                required
+              >
+                <option value="">Select</option>
+                <option value="Electrical">Electrical</option>
+                <option value="Plumbing">Plumbing</option>
+                <option value="WiFi">WiFi</option>
+                <option value="Cleaning">Cleaning</option>
+                <option value="Other">Other</option>
+              </select>
               </div>
 
               {/* PRIORITY */}

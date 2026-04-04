@@ -1,35 +1,74 @@
 import React from "react";
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 const Sidebar = () => {
+  const { user } = useAuth();
+
+  // ⛔ Wait until user loads
+  if (!user) return null;
+
+  // 🔥 Normalize role (handles admin, Admin, spaces, etc.)
+  const role = String(user?.role || user?.userType || "")
+    .trim()
+    .toLowerCase();
+
+  // 🔥 Admin access (both admin + warden)
+  const isAdmin = role === "warden" || role === "admin";
+
   return (
-    <div className="glass p-5 flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
 
-      <h1 className="text-xl font-bold">Smart Hostel</h1>
+      <h1 className="text-xl font-bold mb-4">Smart Hostel</h1>
 
-      <nav className="flex flex-col gap-2 text-sm">
-        <div className="p-2 rounded-xl hover:bg-white/50 cursor-pointer">Dashboard</div>
-        <div className="p-2 rounded-xl hover:bg-white/50 cursor-pointer">My Complaints</div>
-        <div className="p-2 rounded-xl hover:bg-white/50 cursor-pointer">Create Complaint</div>
-        <div className="p-2 rounded-xl hover:bg-white/50 cursor-pointer">All Complaints</div>
-        <div className="p-2 rounded-xl hover:bg-white/50 cursor-pointer">Analytics</div>
+      <nav className="flex flex-col gap-3 text-sm">
+
+        {/* Common */}
+        <Link to="/" className="p-2 rounded-xl hover:bg-white/50 transition">
+          Dashboard
+        </Link>
+
+        {/* 🎓 STUDENT ONLY */}
+        {role === "student" && (
+          <>
+            <Link
+              to="/my-complaints"
+              className="p-2 rounded-xl hover:bg-white/50 transition"
+            >
+              My Complaints
+            </Link>
+
+            <Link
+              to="/create-complaint"
+              className="p-2 rounded-xl hover:bg-white/50 transition"
+            >
+              Create Complaint
+            </Link>
+          </>
+        )}
+
+        {/* 🛡️ ADMIN + WARDEN */}
+        {isAdmin && (
+          <>
+            <Link
+              to="/all-complaints"
+              className="p-2 rounded-xl hover:bg-white/50 transition"
+            >
+              All Complaints
+            </Link>
+
+            <Link
+              to="/analytics"
+              className="p-2 rounded-xl hover:bg-white/50 transition"
+            >
+              Analytics
+            </Link>
+          </>
+        )}
+
       </nav>
-
     </div>
   );
 };
-const role = "student"; // change to admin / warden
 
-{role === "student" && (
-  <>
-    <div>My Complaints</div>
-    <div>Create Complaint</div>
-  </>
-)}
-
-{role !== "student" && (
-  <>
-    <div>All Complaints</div>
-    <div>Analytics</div>
-  </>
-)}
 export default Sidebar;

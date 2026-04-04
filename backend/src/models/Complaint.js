@@ -19,7 +19,7 @@ const complaintSchema = new mongoose.Schema(
         "Furniture",
         "Washroom",
         "WiFi",
-        "Cleanliness",
+        "Cleaning",
         "Security",
         "Other",
       ],

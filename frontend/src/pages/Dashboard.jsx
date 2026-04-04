@@ -1,58 +1,114 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
-import ComplaintCard from "../components/ComplaintCard";
+import api from "../services/api";
 
 const Dashboard = () => {
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    resolved: 0,
+  });
+
+  const [todayCount, setTodayCount] = useState(0);
+  const [yesterdayCount, setYesterdayCount] = useState(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get("/api/complaints");
+        const complaints = res.data;
+
+        // 🔥 BASIC STATS
+        const total = complaints.length;
+        const pending = complaints.filter(
+          (c) => c.status === "pending"
+        ).length;
+        const resolved = complaints.filter(
+          (c) => c.status === "resolved"
+        ).length;
+
+        setStats({ total, pending, resolved });
+
+        // 🔥 TODAY & YESTERDAY
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        const todayStr = today.toDateString();
+        const yesterdayStr = yesterday.toDateString();
+
+        let todayC = 0;
+        let yesterdayC = 0;
+
+        complaints.forEach((c) => {
+          const date = new Date(c.createdAt).toDateString();
+
+          if (date === todayStr) todayC++;
+          if (date === yesterdayStr) yesterdayC++;
+        });
+
+        setTodayCount(todayC);
+        setYesterdayCount(yesterdayC);
+
+      } catch (error) {
+        console.error("Dashboard error:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <Layout>
+      <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
 
-      {/* TOP CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* STATS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 
-        <div className="glass p-6">
-          <p className="text-gray-600">Total Complaints</p>
-          <h2 className="text-3xl font-bold">24</h2>
+        <div className="glass p-6 rounded-2xl shadow-md">
+          <p className="text-gray-500 text-sm">Total Complaints</p>
+          <h2 className="text-3xl font-bold mt-2">
+            {stats.total}
+          </h2>
         </div>
 
-        <div className="glass p-6">
-          <p className="text-gray-600">Pending</p>
-          <h2 className="text-3xl font-bold text-yellow-500">10</h2>
+        <div className="glass p-6 rounded-2xl shadow-md">
+          <p className="text-gray-500 text-sm">Pending</p>
+          <h2 className="text-3xl font-bold text-yellow-500 mt-2">
+            {stats.pending}
+          </h2>
         </div>
 
-        <div className="glass p-6">
-          <p className="text-gray-600">Resolved</p>
-          <h2 className="text-3xl font-bold text-green-500">14</h2>
+        <div className="glass p-6 rounded-2xl shadow-md">
+          <p className="text-gray-500 text-sm">Resolved</p>
+          <h2 className="text-3xl font-bold text-green-500 mt-2">
+            {stats.resolved}
+          </h2>
         </div>
 
       </div>
 
-      {/* TRANSACTION STYLE LIST */}
-      <div className="mt-6 flex flex-col gap-4">
+      {/* TODAY / YESTERDAY */}
+      <div className="glass p-6 rounded-2xl shadow-md w-fit">
 
-        <p className="text-sm text-gray-600">Today</p>
+        <div className="flex gap-10 text-center">
 
-        <ComplaintCard title="Water Leakage" room="Room 204" status="Resolved" />
-        <ComplaintCard title="WiFi Issue" room="Room 101" status="Pending" />
+          <div>
+            <p className="text-sm text-gray-500">Today</p>
+            <p className="text-xl font-bold text-green-500">
+              {todayCount}
+            </p>
+          </div>
 
-        <p className="text-sm text-gray-600 mt-4">Yesterday</p>
+          <div>
+            <p className="text-sm text-gray-500">Yesterday</p>
+            <p className="text-xl font-bold text-gray-700">
+              {yesterdayCount}
+            </p>
+          </div>
 
-        <ComplaintCard title="Electricity Problem" room="Room 305" status="Delayed" />
-
-      </div>
-
-      {/* CHART UI */}
-      <div className="glass p-6 mt-6">
-        <p className="mb-4 font-semibold">Complaint Trends</p>
-
-        <div className="h-40 flex items-end gap-1">
-          {[...Array(40)].map((_, i) => (
-            <div
-              key={i}
-              className="w-2 bg-gray-400/60 rounded-full"
-              style={{ height: `${Math.random() * 100}%` }}
-            />
-          ))}
         </div>
+
       </div>
 
     </Layout>
