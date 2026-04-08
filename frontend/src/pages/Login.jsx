@@ -12,7 +12,6 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // 🔥 Gmail validation
   const validateEmail = (email) => {
     return /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
   };
@@ -21,7 +20,6 @@ const Login = () => {
     e.preventDefault();
     setError("");
 
-    // ✅ Validation
     if (!validateEmail(email)) {
       setError("Only Gmail addresses are allowed");
       return;
@@ -37,7 +35,14 @@ const Login = () => {
     const result = await login(email, password);
 
     if (result.success) {
-      navigate("/");
+      const role = result.user?.role?.toLowerCase();
+
+      if (role === "admin") {
+        navigate("/admin"); // ✅ Admin
+      } else {
+        navigate("/all-complaints"); // ✅ Student + Warden
+      }
+
     } else {
       setError(result.error);
     }
@@ -46,19 +51,22 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fdfcfb] via-[#f0fdf4] to-[#f5f3ff] p-4 overflow-hidden">
 
-      <div className="w-full max-w-md">
+      <div className="absolute top-[-80px] left-[-80px] w-72 h-72 bg-pink-200 rounded-full blur-3xl opacity-30"></div>
+      <div className="absolute bottom-[-100px] right-[-80px] w-80 h-80 bg-green-200 rounded-full blur-3xl opacity-30"></div>
+      <div className="absolute top-1/3 left-1/2 w-72 h-72 bg-indigo-200 rounded-full blur-3xl opacity-20"></div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+      <div className="w-full max-w-md relative z-10">
 
-          {/* LOGO */}
+        <div className="backdrop-blur-xl bg-white/60 border border-white/40 rounded-3xl shadow-lg p-8">
+
           <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto shadow-md">
-              <Building2 className="h-6 w-6 text-white" strokeWidth={1.8} />
+            <div className="w-14 h-14 bg-[#e0e7ff] rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+              <Building2 className="h-7 w-7 text-indigo-500" />
             </div>
 
-            <h1 className="text-xl font-semibold text-gray-900 mt-4">
+            <h1 className="text-2xl font-semibold text-gray-800 mt-4">
               Smart Hostel
             </h1>
 
@@ -67,69 +75,50 @@ const Login = () => {
             </p>
           </div>
 
-          {/* ERROR */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-500 rounded-xl text-sm">
               {error}
             </div>
           )}
 
-          {/* FORM */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Gmail
-              </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@gmail.com"
+              className="w-full px-4 py-3 rounded-xl border bg-white/70"
+            />
 
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="example@gmail.com"
-                className="w-full p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-            </div>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full px-4 py-3 rounded-xl border bg-white/70"
+            />
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition"
+              className="w-full py-3 rounded-xl font-semibold bg-[#d9f99d]"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
 
           </form>
 
-          {/* FOOTER */}
           <p className="text-center text-sm text-gray-500 mt-6">
             New here?{" "}
-            <Link
-              to="/register"
-              className="text-indigo-600 hover:underline font-medium"
-            >
+            <Link to="/register" className="text-indigo-500">
               Create account
             </Link>
           </p>
 
         </div>
-
       </div>
     </div>
   );

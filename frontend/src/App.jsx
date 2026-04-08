@@ -6,6 +6,7 @@ import MyComplaints from "./pages/MyComplaints";
 import CreateComplaint from "./pages/CreateComplaint";
 import AllComplaints from "./pages/AllComplaints";
 import Analytics from "./pages/Analytics";
+import AdminDashboard from "./pages/AdminDashboard"; // ✅ ADD THIS
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -15,16 +16,17 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* ✅ ADD THESE TWO */}
+        {/* Auth routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Existing routes (unchanged) */}
+        {/* Main routes */}
         <Route path="/" element={<Dashboard />} />
         <Route path="/my-complaints" element={<MyComplaints />} />
         <Route path="/create-complaint" element={<CreateComplaint />} />
         <Route path="/all-complaints" element={<AllComplaints />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/admin" element={<AdminDashboard />} />
 
       </Routes>
     </BrowserRouter>

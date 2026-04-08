@@ -9,7 +9,7 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "student",
+    role: "student", // ✅ fixed
     roomNumber: "",
   });
 
@@ -19,7 +19,6 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // 🔥 Gmail validation
   const validateEmail = (email) => {
     return /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
   };
@@ -28,7 +27,6 @@ const Register = () => {
     e.preventDefault();
     setError("");
 
-    // ✅ Validation
     if (!validateEmail(formData.email)) {
       setError("Only Gmail addresses are allowed");
       return;
@@ -44,14 +42,18 @@ const Register = () => {
       return;
     }
 
-    if (formData.role === "student" && !formData.roomNumber) {
-      setError("Room number is required for students");
+    if (!formData.roomNumber) {
+      setError("Room number is required");
       return;
     }
 
     setLoading(true);
 
-    const { confirmPassword, ...userData } = formData;
+    // ✅ FORCE ROLE = STUDENT (even if tampered)
+    const { confirmPassword, ...userData } = {
+      ...formData,
+      role: "student",
+    };
 
     const result = await register(userData);
 
@@ -65,74 +67,62 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fdfcfb] via-[#f0fdf4] to-[#f5f3ff] p-4">
 
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+      <div className="w-full max-w-md">
 
-        {/* HEADER */}
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto shadow-md">
-            <Building2 className="h-6 w-6 text-white" />
+        <div className="backdrop-blur-xl bg-white/60 border border-white/40 rounded-3xl shadow-lg p-8">
+
+          {/* HEADER */}
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 bg-[#e0e7ff] rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+              <Building2 className="h-7 w-7 text-indigo-500" />
+            </div>
+
+            <h1 className="text-2xl font-semibold text-gray-800 mt-4">
+              Create Account
+            </h1>
+
+            <p className="text-gray-500 text-sm mt-1">
+              Join Smart Hostel 🚀
+            </p>
           </div>
 
-          <h1 className="text-xl font-semibold mt-4">
-            Create Account
-          </h1>
+          {/* ERROR */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-500 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
 
-          <p className="text-gray-500 text-sm mt-1">
-            Join Smart Hostel 🚀
-          </p>
-        </div>
+          {/* FORM */}
+          <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* ERROR */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
+            {/* NAME */}
+            <input
+              type="text"
+              required
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-white/70 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+            />
 
-        {/* FORM */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+            {/* EMAIL */}
+            <input
+              type="email"
+              required
+              placeholder="example@gmail.com"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-white/70 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+            />
 
-          {/* NAME */}
-          <input
-            type="text"
-            required
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-indigo-400"
-          />
-
-          {/* EMAIL */}
-          <input
-            type="email"
-            required
-            placeholder="example@gmail.com"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-indigo-400"
-          />
-
-          {/* ROLE */}
-          <select
-            value={formData.role}
-            onChange={(e) =>
-              setFormData({ ...formData, role: e.target.value })
-            }
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-indigo-400"
-          >
-            <option value="student">Student</option>
-            <option value="warden">Warden</option>
-            <option value="admin">Admin</option>
-          </select>
-
-          {/* ROOM (only student) */}
-          {formData.role === "student" && (
+            {/* ROOM (ONLY FIELD NOW) */}
             <input
               type="text"
               placeholder="Room Number (e.g., A-101)"
@@ -143,55 +133,59 @@ const Register = () => {
                   roomNumber: e.target.value,
                 })
               }
-              className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-white/70 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
             />
-          )}
 
-          {/* PASSWORD */}
-          <input
-            type="password"
-            required
-            placeholder="Password (min 6 chars)"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-indigo-400"
-          />
+            {/* PASSWORD */}
+            <input
+              type="password"
+              required
+              placeholder="Password (min 6 chars)"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-white/70 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+            />
 
-          {/* CONFIRM PASSWORD */}
-          <input
-            type="password"
-            required
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                confirmPassword: e.target.value,
-              })
-            }
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-indigo-400"
-          />
+            {/* CONFIRM PASSWORD */}
+            <input
+              type="password"
+              required
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  confirmPassword: e.target.value,
+                })
+              }
+              className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-white/70 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+            />
 
-          {/* BUTTON */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition"
-          >
-            {loading ? "Creating Account..." : "Sign Up"}
-          </button>
+            {/* BUTTON */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl font-semibold text-gray-800 bg-[#d9f99d] hover:bg-[#bef264] transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98]"
+            >
+              {loading ? "Creating Account..." : "Sign Up"}
+            </button>
 
-        </form>
+          </form>
 
-        {/* FOOTER */}
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Already have an account?{" "}
-          <Link to="/login" className="text-indigo-600 font-medium hover:underline">
-            Sign in
-          </Link>
-        </p>
+          {/* FOOTER */}
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-indigo-500 hover:text-indigo-700 font-medium transition"
+            >
+              Sign in
+            </Link>
+          </p>
+
+        </div>
 
       </div>
     </div>
