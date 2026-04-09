@@ -112,3 +112,49 @@ export const cancelComplaint = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// ================= EDIT (STUDENT - within 15 mins) =================
+export const editComplaint = async (req, res) => {
+  try {
+    const { roomNumber, category, description } = req.body;
+
+    const complaint = await Complaint.findById(req.params.id);
+
+    if (!complaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    // Only owner can edit
+    if (complaint.studentId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // ⏱️ Check 15-minute window
+    const createdTime = new Date(complaint.createdAt).getTime();
+    const currentTime = Date.now();
+
+    const diffMinutes = (currentTime - createdTime) / (1000 * 60);
+
+    if (diffMinutes > 15) {
+      return res.status(400).json({
+        message: "Edit time expired (only within 15 minutes)",
+      });
+    }
+
+    // Update fields
+    complaint.roomNumber = roomNumber || complaint.roomNumber;
+    complaint.category = category || complaint.category;
+    complaint.description = description || complaint.description;
+
+    await complaint.save();
+
+    res.json({
+      message: "Complaint updated successfully",
+      complaint,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
